@@ -1,0 +1,3009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcards Master</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #3f51b5;
+      --primary-dark: #303f9f;
+      --secondary: #ff4081;
+      --success: #4caf50;
+      --warning: #ff9800;
+      --danger: #f44336;
+      --light: #f5f5f5;
+      --dark: #212121;
+      --gray: #757575;
+      --purple: #9c27b0;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f7fa;
+      min-height: 100vh;
+      color: var(--dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: var(--primary-dark);
+      margin: 20px 0 30px;
+      font-size: 2.5rem;
+      font-weight: 500;
+      position: relative;
+      text-align: center;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: var(--secondary);
+      border-radius: 2px;
+    }
+
+    /* Flashcard View Container */
+    .flashcard-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      flex-grow: 1;
+    }
+
+    /* Flashcard Styling */
+   .flashcard {
+      width: 100%;
+      min-height: 400px;
+      max-width: 700px;
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      padding: 70px 40px 40px; /* More top padding for tags */
+      position: relative;
+      margin-bottom: 30px;
+      border: 1px solid rgba(0,0,0,0.05);
+      overflow: hidden; /* Prevent content from overlapping */
+    }
+
+    .flashcard:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    /* Category and Difficulty Tags */
+    .category {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background-color: var(--purple);
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10; /* Higher z-index to stay on top */
+    }
+
+    .difficulty {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10; /* Higher z-index to stay on top */
+    }
+
+
+    .easy { background-color: var(--success); }
+    .medium { background-color: var(--warning); }
+    .hard { background-color: var(--danger); }
+
+    /* Question Styling (Always Visible) */
+    .question {
+      font-size: 1.8rem;
+      line-height: 1.4;
+      margin: 40px 0 20px; /* Added top margin */
+      color: var(--dark);
+      font-weight: 400;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Answer Content */
+    .answer-content {
+      display: none;
+      margin-top: 20px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .answer {
+      font-size: 1.5rem;
+      line-height: 1.4;
+      color: var(--dark);
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+
+    .explanation {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      color: var(--gray);
+      line-height: 1.6;
+      border-left: 4px solid var(--primary);
+    }
+
+    /* Reveal Prompt */
+    .tap-to-reveal {
+      display: block;
+      text-align: center;
+      color: var(--gray);
+      font-style: italic;
+      margin: 20px 0;
+      font-size: 1.1rem;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Navigation Buttons */
+    .nav-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      width: 100%;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 14px 28px;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+    }
+
+    button:hover {
+      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    button.secondary {
+      background-color: var(--gray);
+    }
+
+    button.secondary:hover {
+      background-color: #616161;
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      max-width: 700px;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .card-counter {
+      text-align: center;
+      color: var(--gray);
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+
+    /* Category View */
+    .category-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .category-card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 30px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 200px;
+      transition: var(--transition);
+      cursor: pointer;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .category-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.12);
+    }
+
+    .category-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 6px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 50px;
+      color: var(--gray);
+      grid-column: 1 / -1;
+    }
+
+    .empty-state i {
+      font-size: 3.5rem;
+      margin-bottom: 25px;
+      color: #bdbdbd;
+    }
+
+    .empty-state h3 {
+      margin-bottom: 15px;
+      color: var(--dark);
+      font-weight: 400;
+      font-size: 1.8rem;
+    }
+
+    /* Search */
+    .search-container {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 14px 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.2);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .flashcard {
+        min-height: 350px;
+        padding: 30px;
+      }
+      
+      .question {
+        font-size: 1.5rem;
+      }
+      
+      .answer {
+        font-size: 1.3rem;
+      }
+      
+      button {
+        padding: 12px 24px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .flashcard {
+        min-height: 300px;
+        padding: 25px;
+      }
+      
+      .question {
+        font-size: 1.3rem;
+      }
+      
+      .answer {
+        font-size: 1.1rem;
+      }
+      
+      .nav-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .category-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fas fa-layer-group"></i> Flashcards Master</h1>
+
+  <!-- Search -->
+  <div class="search-container" id="search-container" style="display: none;">
+    <input type="text" class="search-input" id="search-input" placeholder="Search flashcards...">
+    <button class="search-button" id="search-button"><i class="fas fa-search"></i> Search</button>
+  </div>
+
+  <!-- Category View -->
+  <div class="category-container" id="category-container"></div>
+
+  <!-- Flashcard View -->
+  <div id="flashcard-view" style="display: none;">
+    <div class="progress-container" id="progress-container">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    
+    <div class="card-counter" id="card-counter"></div>
+    
+    <div class="flashcard-view">
+      <div id="flashcard-container"></div>
+      <div class="nav-buttons" id="nav-buttons">
+        <button id="prev-btn"><i class="fas fa-arrow-left"></i> Previous</button>
+        <button id="next-btn">Next <i class="fas fa-arrow-right"></i></button>
+        <button id="back-btn" class="secondary"><i class="fas fa-home"></i> Back</button>
+        <button id="shuffle-btn"><i class="fas fa-random"></i> Shuffle</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const flashcards = [
+      {
+question: "What are the three main components of the HCM organizational structure?",
+answer: "Enterprise Structure, Personnel Structure, and Organizational Plan",
+explanation: "These three components form the foundation of HR organizational management in SAP HCM.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What is an Infotype in SAP HCM?",
+answer: "A grouping of related fields used to store HR master data",
+explanation: "Infotypes are like tables that organize HR information such as addresses, payroll, and personal data.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What does the Personnel Area represent in the enterprise structure?",
+answer: "A subdivision of the company depicting physical locations or reporting areas",
+explanation: "Personnel areas often align with geographic locations or administrative divisions within a company.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What is the difference between a Job and a Position in HCM?",
+answer: "A Job is a general classification, while a Position is a concrete instance filled by a person",
+explanation: "Jobs define roles generically, while Positions are specific assignments within the organization.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What are Subtypes in HCM Infotypes?",
+answer: "Further classifications within an infotype for more specific data organization",
+explanation: "Subtypes allow detailed categorization, such as different types of addresses within the Address infotype.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of Time Constraints in HCM?",
+answer: "To control how many records can exist for an infotype and their validity periods",
+explanation: "Time constraints ensure data integrity by regulating record overlaps and gaps in HR master data.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What does ESS stand for in HCM?",
+answer: "Employee Self-Service",
+explanation: "ESS allows employees to maintain their own personal information and perform administrative tasks.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What does MSS stand for in HCM?",
+answer: "Manager Self-Service",
+explanation: "MSS provides managers with tools to manage team information and HR processes.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What is a Personnel Action in HCM?",
+answer: "A sequence of infotypes processed for specific HR events like hiring or termination",
+explanation: "Personnel actions guide users through required data entry for major employment status changes.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What are the three main search mechanisms in HCM?",
+answer: "Free Search, Search Term, and Structure Search",
+explanation: "These search methods provide different approaches to finding HR data and objects.",
+category: "HCM",
+difficulty: "easy"
+},
+{
+question: "What is the difference between Employee Group and Employee Subgroup?",
+answer: "Employee Group classifies employment status, while Employee Subgroup further categorizes by pay frequency or contract type",
+explanation: "Employee Groups define broad categories, while Subgroups provide more detailed classification.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is Time Constraint 1 in HCM?",
+answer: "Only one record may exist at any time without gaps in validity periods",
+explanation: "Time Constraint 1 ensures continuous, non-overlapping records for critical infotypes.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is Time Constraint 2 in HCM?",
+answer: "Only one record may exist at any time, but gaps in validity are permitted",
+explanation: "Time Constraint 2 allows for periods where no record exists for the infotype.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is Time Constraint 3 in HCM?",
+answer: "Multiple records may exist simultaneously, and gaps in validity are permitted",
+explanation: "Time Constraint 3 allows for flexible record management with overlaps and gaps possible.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is an InfoGroup in HCM?",
+answer: "A grouping of relevant infotypes in sequence for performing specific personnel actions",
+explanation: "InfoGroups define the order and selection of infotypes processed during HR transactions.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Qualifications and Requirements in HCM?",
+answer: "Qualifications are what employees possess, while Requirements are what the organization needs",
+explanation: "This distinction enables matching employee skills with organizational needs.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is Profile Matchup in HCM?",
+answer: "A function to compare qualifications and requirements of persons, jobs, and positions",
+explanation: "Profile matchup helps in talent management and succession planning by identifying skill matches.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is Succession Planning in HCM?",
+answer: "The process of identifying critical positions and developing action plans for potential successors",
+explanation: "Succession planning ensures organizational continuity by preparing employees for key roles.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What does 'delimit' mean in HCM context?",
+answer: "To close or end the validity of a record when a new overlapping record is created",
+explanation: "Delimiting maintains data integrity by preventing conflicting valid records for the same infotype.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Applicant Groups in HCM?",
+answer: "To classify applicants by type of employment contract and enable authorization checks",
+explanation: "Applicant groups help organize recruitment processes and manage different types of job applications.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Personnel Action and Fast Entry?",
+answer: "Personnel Action processes multiple infotypes in sequence, while Fast Entry maintains the same infotype for multiple employees",
+explanation: "Personnel actions handle complex employment changes, while fast entry enables bulk data maintenance.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "How are Banks maintained in SAP HCM?",
+answer: "At the client level in a central bank directory",
+explanation: "Bank master data is stored centrally and shared across the entire SAP client.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is a Business Event Type in HCM?",
+answer: "A blueprint for creating events, containing typical attributes for scheduling and management",
+explanation: "Event types standardize the creation of training, meetings, and other business events.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is the Preview Period in HCM?",
+answer: "A specified timeframe for viewing organizational objects to avoid confusion",
+explanation: "The preview period helps users focus on relevant data by limiting the display timeframe.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between a Person and a User in HCM?",
+answer: "A Person is a natural individual, while a User is an ID with assigned system privileges",
+explanation: "One person can have multiple user IDs for different system access purposes.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What is SAP SuccessFactors?",
+answer: "A cloud-based Human Capital Management software suite",
+explanation: "SuccessFactors offers cloud HCM solutions complementing traditional SAP HCM.",
+category: "HCM",
+difficulty: "medium"
+},
+{
+question: "What are the key components of the Enterprise Structure?",
+answer: "Company Code, Personnel Area, and Personnel Subarea",
+explanation: "These elements define the formal and financial structure of the organization in HCM.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the key components of the Personnel Structure?",
+answer: "Employee Group, Employee Subgroup, and Payroll Accounting Area",
+explanation: "These elements define how employees are classified and paid within the organization.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the key components of the Organizational Plan?",
+answer: "Organizational Units, Jobs, and Positions",
+explanation: "These elements define the reporting structure and role definitions within the company.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is Time Constraint A in HCM?",
+answer: "Only one record may ever exist for the infotype and it cannot be deleted",
+explanation: "Time Constraint A is used for permanent, non-changeable records like payroll status.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is Time Constraint T in HCM?",
+answer: "Time constraint that depends on the subtype of an infotype",
+explanation: "Time Constraint T provides flexibility by varying constraints based on subtype characteristics.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is Time Constraint Z in HCM?",
+answer: "Used for time management infotypes where records cover partial day periods",
+explanation: "Time Constraint Z supports detailed time recording for attendance and absence management.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is an HR Mini Master?",
+answer: "A light framework for housing data prior to full SAP HR implementation",
+explanation: "Mini masters serve as interim solutions for data management before complete system rollout.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the main capabilities of Employee Self-Service (ESS)?",
+answer: "Updating personal information, submitting expenses, checking benefits, managing vacation requests, and enrolling in training",
+explanation: "ESS empowers employees to manage their own HR administrative tasks efficiently.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the main capabilities of Manager Self-Service (MSS)?",
+answer: "Recruiting employees, compensation planning, cost control, budget management, and headcount planning",
+explanation: "MSS provides managers with comprehensive tools for team and resource management.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is Career Planning in HCM?",
+answer: "The process of mapping employee development paths and potential career progression",
+explanation: "Career planning helps employees and organizations align growth opportunities with business needs.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the different types of Business Events in HCM?",
+answer: "With Pattern, Without Pattern, and User Defined events",
+explanation: "These event types accommodate different levels of structure and customization for business activities.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Designation in organizational management?",
+answer: "To assign Jobs to Positions, inheriting tasks and allowing additional position-specific responsibilities",
+explanation: "Designation links generic job descriptions to specific organizational positions.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How do the three search methods differ in HCM?",
+answer: "Free search uses field criteria, Search term uses predefined terms, Structure search uses organizational hierarchy",
+explanation: "Each search method serves different user needs and data access scenarios.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the significance of the Personnel File in HCM?",
+answer: "It displays a collection of all records created for a personnel number",
+explanation: "The personnel file provides a comprehensive view of an employee's complete HR history.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How are Applicant Classes used in recruitment?",
+answer: "To distinguish between internal (class P) and external (class AP) applicants",
+explanation: "Applicant classes enable different processing and authorization for internal vs external candidates.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the common Infotype numbers and their purposes?",
+answer: "0002 Personal Data, 0006 Addresses, 0008 Basic Pay, 0009 Bank Details, 0021 Family/Related Persons",
+explanation: "Infotype numbers standardize the storage of specific HR data categories across the system.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the relationship between Organizational Units, Positions, and Persons?",
+answer: "Organizational Units contain Positions, which are held by Persons, forming the reporting structure",
+explanation: "This relationship defines the organizational hierarchy and reporting lines within the company.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How does the system handle overlapping records with Time Constraint 1?",
+answer: "It automatically delimits previous records when new overlapping records are created",
+explanation: "This automatic delimiting maintains the single-record requirement of Time Constraint 1.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the three-column layout in Free Search?",
+answer: "Value Selection for criteria, Value Output for codes, Text Display for descriptions",
+explanation: "This layout provides comprehensive search capabilities with both technical and business views.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How do InfoGroups support Personnel Actions?",
+answer: "They define the sequence and selection of infotypes processed during specific HR transactions",
+explanation: "InfoGroups ensure consistent and complete data collection for standardized HR processes.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the role of Personnel Subareas in benefits determination?",
+answer: "They subdivide personnel areas for specific benefits eligibility based on employment categories",
+explanation: "Personnel subareas enable precise benefits administration for different employee types.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How does Succession Planning integrate with Profile Matchup?",
+answer: "Profile matchup identifies potential successors by comparing employee qualifications with position requirements",
+explanation: "This integration enables data-driven succession planning based on actual skill matches.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What are the key differences between SAP HCM and SuccessFactors?",
+answer: "SAP HCM is on-premise, while SuccessFactors is cloud-based with different architecture and deployment",
+explanation: "The choice between them depends on organizational preferences for deployment and functionality.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How are Business Event Groups used in HCM?",
+answer: "To form hierarchical structures by grouping multiple event types for organized management",
+explanation: "Event groups help categorize and manage related business events efficiently.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the significance of the icons in organizational structure displays?",
+answer: "They indicate the type and status of organizational objects for quick visual identification",
+explanation: "Icons provide intuitive navigation and understanding of complex organizational structures.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How does Single Screen maintenance differ from other data entry methods?",
+answer: "It allows maintaining one infotype for one personnel number at a time, without action sequencing",
+explanation: "Single screen maintenance provides focused data entry for specific infotype updates.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Preview Period indicators?",
+answer: "To show objects starting (right arrow) or ending (left arrow) within the preview period",
+explanation: "These visual indicators help users understand temporal relationships in organizational data.",
+category: "HCM",
+difficulty: "hard"
+},
+{
+question: "How are Employee Groups and Subgroups used in payroll processing?",
+answer: "They determine pay frequency, contract types, and eligibility for different compensation elements",
+explanation: "This classification enables accurate and automated payroll calculations based on employment categories.",
+category: "HCM",
+difficulty: "hard"
+},
+      ,{
+question: "What is the primary purpose of Production Planning in SAP?",
+answer: "To align demand with manufacturing capacity to create production and procurement schedules",
+explanation: "Production Planning balances customer demand with available manufacturing resources to create efficient production schedules.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What are Planned Independent Requirements (PIR)?",
+answer: "Planned requirements for a material without reference to sales orders",
+explanation: "PIRs represent forecasted demand used for production planning before actual customer orders are received.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of MRP (Material Requirements Planning)?",
+answer: "To perform net requirements calculation and create procurement proposals for materials",
+explanation: "MRP compares existing stock and receipts with requirements to identify shortages and suggest procurement.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is a Work Center in production planning?",
+answer: "A location where operations are carried out, such as machines, employees, or production lines",
+explanation: "Work centers represent production resources with assigned capacities for scheduling and cost calculation.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is a Routing in production?",
+answer: "A collection and sequence of steps needed to manufacture a product",
+explanation: "Routings define the manufacturing process with operations, sequences, and work center assignments.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is a Production Order?",
+answer: "A firm order that defines what, where, when, and how to produce a specific quantity",
+explanation: "Production orders are created from planned orders and contain detailed manufacturing instructions.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is a Planned Order?",
+answer: "A request to trigger production of a product in specific quantity and timing",
+explanation: "Planned orders are preliminary production requests that can be converted to firm production orders.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of a Bill of Material (BOM) in production?",
+answer: "To list all components required to produce a finished product",
+explanation: "BOMs define the product structure and component relationships for production and costing.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What does the MRP Controller do?",
+answer: "Oversees material requirements planning and ensures material availability",
+explanation: "MRP controllers manage groups of materials and coordinate planning activities.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is Backflush Costing?",
+answer: "Automatic goods issue posting at operation confirmation without manual entry",
+explanation: "Backflushing automates material consumption accounting during production confirmation.",
+category: "PP",
+difficulty: "easy"
+},
+{
+question: "What is the difference between Strategy 10 and Strategy 20 in production planning?",
+answer: "Strategy 10 is Make-to-Stock, while Strategy 20 is Make-to-Order",
+explanation: "Make-to-Stock produces for inventory, while Make-to-Order produces only against customer orders.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What are the three types of MRP Areas?",
+answer: "Plant MRP Area, Storage Location MRP Area, and Subcontractor MRP Area",
+explanation: "MRP areas allow independent planning at different organizational levels and for external partners.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Backward and Forward Consumption modes?",
+answer: "Backward consumes PIRs before requirement dates, Forward consumes PIRs after requirement dates",
+explanation: "Consumption direction affects how sales orders consume planned independent requirements in time.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the SchedMargin Key?",
+answer: "To define float times for production scheduling and order management",
+explanation: "SchedMargin key controls buffer times for order creation, production start, and completion.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What are the main components of the SchedMargin Key?",
+answer: "Opening period, Float before production, Float after production, and Release period",
+explanation: "These components define various buffer times in the production scheduling process.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the difference between NEUPL and NETCH processing keys in MRP?",
+answer: "NEUPL plans all materials, NETCH plans only changed materials since last run",
+explanation: "NEUPL is regenerative planning, while NETCH is net change planning for efficiency.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is a Production Version?",
+answer: "A combination of alternative BOM and routing for manufacturing a product",
+explanation: "Production versions allow different manufacturing methods for the same product.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Lot Sizing in MRP?",
+answer: "To calculate optimal procurement or production quantities",
+explanation: "Lot sizing methods determine how requirements are grouped into procurement proposals.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What are the different types of Lot Sizing procedures?",
+answer: "EX (Lot-for-Lot), FX (Fixed), HB (Replenishment), TB/WB/MB (Periodic)",
+explanation: "Different lot sizing methods serve various inventory and production strategies.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Settlement in production accounting?",
+answer: "To transfer costs from production orders to final inventory and variance accounts",
+explanation: "Settlement closes production orders and assigns actual costs to finished goods inventory.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the Net Change Planning Indicator used for?",
+answer: "To identify materials that have changed and need replanning in net change MRP runs",
+explanation: "This indicator flags materials with changes since the last planning run for efficient replanning.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What are Dependent Requirements?",
+answer: "Material requirements generated by production of higher-level assemblies",
+explanation: "Dependent requirements are automatically calculated from BOM explosions during MRP.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the Stock/Requirements List?",
+answer: "A dynamic display of all stock, requirements, and receipts for a material",
+explanation: "This list shows real-time material availability and planning situation.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Demand Management?",
+answer: "To disaggregate high-level planning data into detailed material requirements",
+explanation: "Demand Management breaks down product group plans into individual component requirements.",
+category: "PP",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Strategy 40 and Strategy 50?",
+answer: "Strategy 40 plans with final assembly, Strategy 50 plans without final assembly",
+explanation: "Strategy 40 produces finished goods to stock, while Strategy 50 produces subassemblies for final assembly to order.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "How do Requirement Classes, Requirement Types, and Strategy Groups relate?",
+answer: "Requirement Classes are assigned to Requirement Types, which are assigned to Strategy Groups, which are assigned to materials",
+explanation: "This hierarchy controls how different materials are planned based on their production strategies.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What are the key forecasting parameters and their purposes?",
+answer: "Alpha (basic value smoothing), Beta (trend smoothing), Gamma (seasonal smoothing), Delta (deviation smoothing)",
+explanation: "These parameters control how the forecasting model responds to historical data patterns.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Parametric Optimization in forecasting?",
+answer: "To automatically calculate optimal smoothing factors based on historical data",
+explanation: "Parametric optimization improves forecast accuracy by adjusting model parameters automatically.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What are the different MRP Types and their purposes?",
+answer: "PD (MRP), VB (Manual reorder), V1 (Automatic reorder), VV (Forecast-based), ND (No planning)",
+explanation: "Different MRP types control how materials are planned based on consumption patterns and criticality.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Backward and Forward Scheduling?",
+answer: "Backward scheduling starts from delivery date and works backward, Forward scheduling starts from available date and works forward",
+explanation: "Backward scheduling meets requested dates, Forward scheduling finds earliest possible dates.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the MRP Cockpit in S/4HANA?",
+answer: "To provide information on material shortages and uncovered sales orders with solution proposals",
+explanation: "MRP Cockpit offers comprehensive visibility and decision support for material planning.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What are the key master data elements in Production Planning?",
+answer: "Material Master, Bill of Material, Work Center, Routing, Production Resource Tools",
+explanation: "These master data elements form the foundation for all production planning and execution.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Routing Group and Group Counter?",
+answer: "To manage alternative manufacturing methods for the same product",
+explanation: "Group identifies similar routings, while counter differentiates specific versions within the group.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "How are Production Orders accounted for in financial accounting?",
+answer: "As temporary cost collectors that accumulate costs until settlement to finished goods inventory",
+explanation: "Production orders track manufacturing costs temporarily before final assignment to inventory.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the accounting impact of Goods Issue to Production Order?",
+answer: "Raw Material inventory is credited and Production Order is debited",
+explanation: "This transaction transfers material costs from inventory to the production order.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the accounting impact of Goods Receipt from Production Order?",
+answer: "Finished Goods inventory is debited and Production Order is credited",
+explanation: "This transaction transfers completed product costs from production order to inventory.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "How are production variances handled in settlement?",
+answer: "Variances are settled to variance accounts and COGM, zeroing the production order balance",
+explanation: "Variance settlement ensures production costs are properly allocated and orders are closed.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Procurement Type in material master?",
+answer: "To define whether material is produced in-house, procured externally, or both",
+explanation: "Procurement type controls the default sourcing strategy for material requirements.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the role of the Production Scheduler?",
+answer: "To maximize resource utilization through scheduling activities",
+explanation: "Production schedulers optimize capacity usage and coordinate production timelines.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Planned Delivery Time?",
+answer: "To define maximum calendar days between purchase order issuance and delivery",
+explanation: "This parameter helps MRP calculate when to create procurement proposals.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Product Group and individual material planning?",
+answer: "Product Group enables high-level aggregate planning, while individual planning provides detailed requirements",
+explanation: "Product groups simplify planning for product families before disaggregation to individual items.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Version Management in Sales and Operations Planning?",
+answer: "To maintain multiple planning scenarios with different assumptions and forecasts",
+explanation: "Version management allows comparison of optimistic, pessimistic, and other planning scenarios.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the significance of the Active Version in planning?",
+answer: "It is the definitive version used for actual planning and execution",
+explanation: "Only one version can be active, serving as the official plan for the organization.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Initialization Periods in forecasting?",
+answer: "To define how many historical periods are used to initialize the forecasting model",
+explanation: "Initialization periods determine the data baseline for forecast calculations.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What are MRP Elements used for?",
+answer: "For net requirement calculation by representing stock, receipt, and issue elements",
+explanation: "MRP elements track all factors affecting material availability in planning.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Planning File Entry?",
+answer: "To track which materials have changes requiring replanning in MRP runs",
+explanation: "Planning file entries make net change planning efficient by flagging changed materials.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Planned Order Profile and Production Order Type?",
+answer: "Planned Order Profile controls planned order behavior, while Production Order Type controls production order processing",
+explanation: "These order types manage different stages of the production planning and execution process.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Production Parameters and Formulas?",
+answer: "To calculate standard values for operations based on variable inputs and mathematical relationships",
+explanation: "Parameters and formulas automate the calculation of setup, processing, and teardown times.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is Invisible Transfer in planning?",
+answer: "A setting that allows planners to modify results before saving to Demand Management",
+explanation: "Invisible transfer provides flexibility to adjust automated planning results manually.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is Pegging in production planning?",
+answer: "The linking of requirement elements with receipt elements across different orders",
+explanation: "Pegging shows the relationships between supply and demand throughout the production process.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the role of Integrated Business Planning (IBP) replacing SOP?",
+answer: "To provide advanced statistical forecasting, multi-level planning, and collaboration tools",
+explanation: "IBP offers enhanced capabilities over traditional Sales and Operations Planning.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What are the key capabilities of MRP Live in S/4HANA?",
+answer: "Optimized MRP runs using HANA in-memory computing for faster processing",
+explanation: "MRP Live leverages S/4HANA's advanced architecture for improved performance.",
+category: "PP",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Alert Monitor in PP/DS?",
+answer: "To provide single-point access to production planning and detailed scheduling problems",
+explanation: "Alert Monitor helps identify and resolve issues in production planning processes.",
+category: "PP",
+difficulty: "hard"
+}
+,
+      {
+question: "What is the primary purpose of the Material Ledger in SAP S/4HANA?",
+answer: "To valuate material inventories in multiple currencies and GAAPs in parallel.",
+explanation: "The Material Ledger acts as an inventory subledger, enabling parallel valuation across different currencies and accounting principles.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "Which transaction code is used for goods movement in Material Management?",
+answer: "MIGO",
+explanation: "MIGO is the standard transaction for performing goods movements in SAP MM.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What movement type is used for the initial entry of stock balances?",
+answer: "561",
+explanation: "Movement type 561 is specifically used for the initial entry of stock into the system.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What are the three main views required in a Vendor Master record?",
+answer: "General, Accounting, and Purchasing",
+explanation: "All three views must be active for a vendor master record to be fully functional.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What does the Material Type determine in the material master?",
+answer: "Which views are available for the material",
+explanation: "Different material types control which screens and fields are available in the material master.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "Which material type represents Finished Goods?",
+answer: "FERT",
+explanation: "FERT is the standard SAP material type for finished products ready for sale.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What is the material type for Non-Stock Materials?",
+answer: "NLAG",
+explanation: "NLAG materials are immediately consumed after procurement and no stock is maintained.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What are the three main stock types when receiving goods?",
+answer: "Unrestricted-use stock, Quality inspection stock, and Blocked stock",
+explanation: "Goods can be received into these three different stock categories based on their usability.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What does RFQ stand for in procurement?",
+answer: "Request for Quotation",
+explanation: "RFQ is the process of inviting vendors to submit price quotes for goods or services.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of a Purchase Info Record?",
+answer: "To store information about a specific material and vendor, including current pricing",
+explanation: "Info records contain vendor-specific data like prices, delivery times, and conditions.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What accounting impact occurs when creating a purchase order?",
+answer: "No accounting impact",
+explanation: "Creating a purchase order is a commitment but doesn't create accounting entries until goods are received or invoiced.",
+category: "MM",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of the GR/IR Clearing Account?",
+answer: "To handle differences between goods receipt and invoice receipt timing",
+explanation: "The GR/IR account temporarily holds values when goods and invoices are received at different times.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Material Type and Material Group?",
+answer: "Material Type determines available views and basic characteristics, while Material Group further categorizes materials within a type",
+explanation: "Material Types define fundamental properties, while Material Groups provide finer classification for reporting and purchasing.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What are Non-Valuated Materials?",
+answer: "Materials maintained by quantity only, with no value-based inventory management",
+explanation: "Non-valuated materials track quantities but don't affect financial accounting with value postings.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the Account Assignment Category in purchase orders?",
+answer: "To indicate whether the purchase is for stock, consumption, asset, cost center, or project",
+explanation: "The AAC determines how costs will be allocated and which accounts will be charged.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is Three-Way Match in invoice verification?",
+answer: "Comparing purchase order, goods receipt, and invoice to ensure they match in price, quantity, and quality",
+explanation: "This control mechanism prevents payment for incorrect or undelivered goods.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between a Contract and a Scheduling Agreement?",
+answer: "A contract specifies quantities/prices over time, while a scheduling agreement defines delivery schedules for repetitive receipts",
+explanation: "Contracts are for planned purchases, while scheduling agreements are for regular, scheduled deliveries.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the role of Valuation Class in account determination?",
+answer: "It links material master records to general ledger accounts",
+explanation: "Valuation classes group materials with similar accounting requirements and connect them to specific GL accounts.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is a Valuation Area?",
+answer: "An organizational unit where materials are valued separately, typically a plant",
+explanation: "Valuation areas allow different valuation methods and accounts for the same material in different plants.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What are Movement Types used for?",
+answer: "To identify and classify different types of goods movements",
+explanation: "Movement types control the system behavior and account determination for each goods movement transaction.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the Account Category Reference?",
+answer: "To control which valuation classes are allowed for specific material types",
+explanation: "It acts as a bridge between material types and valuation classes, providing flexibility in account assignment.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What are Transaction Keys used for in account determination?",
+answer: "To differentiate account determination by business transaction type",
+explanation: "Transaction keys like BSX, GBB, and WRX identify specific accounting scenarios for automatic postings.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is Consignment Stock?",
+answer: "Vendor-owned stock stored at the company's premises, with payment triggered only upon consumption",
+explanation: "The company has physical possession but no financial liability until the goods are used.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is Sub-Contracting in procurement?",
+answer: "Sending raw materials to an external vendor who processes them and returns finished goods",
+explanation: "Sub-contracting uses special purchase orders with item category 'L' for external processing.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the Automatic Payment Run?",
+answer: "To automatically select open invoices, process payments, and generate payment media",
+explanation: "This process streamlines accounts payable by automating payment processing for multiple vendors.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "How does the Check Double Invoice feature work?",
+answer: "It warns users when the same vendor invoices the same amount, helping prevent duplicate payments",
+explanation: "This control mechanism compares new invoices with existing ones to detect potential duplicates.",
+category: "MM",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Industry Sector and Material Type?",
+answer: "Industry Sector controls screen sequences and industry-specific fields, while Material Type determines available views and basic characteristics",
+explanation: "Industry Sector is broader and industry-focused, while Material Type is more specific to material characteristics.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What are the characteristics of Consumable Materials with a master record?",
+answer: "No value-based inventory management, automatic consumption updating, and procurement for account assignment objects",
+explanation: "These materials are tracked for consumption but not valued in inventory; they're charged directly to cost objects.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Valuation Modifier (Valuation Grouping Code)?",
+answer: "To group valuation areas together to minimize the number of account determination entries",
+explanation: "Valuation modifiers allow multiple plants or company codes to share the same account determination settings.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does Account Determination work using Valuation Class, Valuation Modifier, and General Modifier?",
+answer: "These three elements work together to determine the exact GL accounts for specific business transactions",
+explanation: "The combination provides a hierarchical approach to account assignment, allowing both standardization and flexibility.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is a Value String in account determination?",
+answer: "A system-defined grouping of transaction keys that represent all possible postings for a business transaction",
+explanation: "Value strings contain hard-coded transaction keys that determine which accounts are affected by a goods movement.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the difference between General Modifier and Account Modifier?",
+answer: "General Modifier is an account grouping for similar transactions, while Account Modifier is a finer subdivision of Transaction Keys",
+explanation: "General Modifiers group similar business transactions, while Account Modifiers provide more granular control within transaction keys.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How are Partner Functions used for vendors?",
+answer: "They define different roles like ordering address, goods supplier, invoicing party, and can be set as mandatory, optional, or allowing multiple values",
+explanation: "Vendor partner functions allow flexibility in handling different business relationships with the same vendor entity.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the Infoupdate field in purchase orders?",
+answer: "It determines whether PO prices and conditions update the Purchase Info Record for future use",
+explanation: "This setting controls whether the system learns from current purchases to improve future purchasing decisions.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What are the different levels of material data organization in MM?",
+answer: "Client level, Company level, Plant level, and Storage Location level",
+explanation: "Material data is organized hierarchically, with different data valid at different organizational levels.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does the Material Status field function?",
+answer: "It indicates whether a material has restrictions, such as being under development or scheduled for discontinuation",
+explanation: "Material status controls whether a material can be used in various business processes like purchasing or production.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Availability Check field in the material master?",
+answer: "To specify how the system checks material availability and generates requirements for planning",
+explanation: "This field controls which MRP elements are considered in availability checks and requirements planning.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How can Purchase Organizations be structured?",
+answer: "At client level, company code level, or plant level, with cross-company-code purchasing organizations not assigned to any company code",
+explanation: "Purchase organization structure determines the scope and authority of purchasing activities within the enterprise.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the role of Purchase Groups?",
+answer: "They represent individuals or teams responsible for defining criteria and evaluating products/services, and can be internal or external",
+explanation: "Purchase groups bring specialized knowledge to the procurement process, regardless of organizational structure.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is a Transfer Posting in inventory management?",
+answer: "A change in a material's stock type or category without changing the total quantity, such as releasing from quality inspection",
+explanation: "Transfer postings change how stock is classified while keeping it in the same physical location or moving it between bins.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does the Delivery Complete indicator function in purchase orders?",
+answer: "It marks a purchase order as complete when no more deliveries are expected, even if the ordered quantity hasn't been fully received",
+explanation: "This indicator allows closing purchase orders partially when suppliers cannot deliver the full ordered quantity.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the Collective Number in RFQs and purchase orders?",
+answer: "A code that facilitates collective management of multiple individual RFQs or purchase orders",
+explanation: "Collective numbers help group related purchasing documents for easier management and reporting.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How do Transportation Groups and Loading Groups differ?",
+answer: "Transportation Groups classify materials with similar transport requirements, while Loading Groups classify materials with similar loading equipment needs",
+explanation: "Transportation groups affect shipping route determination, while loading groups influence shipping point determination.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the accounting impact when goods are received against a purchase order?",
+answer: "Inventory account is debited and GR/IR clearing account is credited",
+explanation: "This records the increase in inventory value and creates a temporary liability until the invoice is received.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How are price differences handled for materials with standard price vs. moving average price?",
+answer: "Standard price materials use price difference accounts, while moving average materials adjust the inventory value directly",
+explanation: "Standard price maintains fixed valuation with variance accounts, while moving average continuously updates the material value.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Material Statistical Group?",
+answer: "To classify materials for statistical reporting purposes based on common attributes",
+explanation: "This field enables customized reporting and analysis by grouping materials with similar characteristics.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does the Extend Material function differ from Create Material?",
+answer: "Extend copies material data to additional plants or adds views, while Create makes a new material or adds missing views to existing ones",
+explanation: "Extend builds on existing material data, while Create establishes new material records or completes incomplete ones.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What are the key differences between various material types in terms of inventory management?",
+answer: "FERT and HALB use value-based inventory, NLAG has no stock management, UNBW has quantity-only tracking, and consumables vary by configuration",
+explanation: "Different material types have fundamentally different approaches to inventory valuation and quantity tracking.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does Source of Supply Determination work in procurement?",
+answer: "It uses standard POs for known vendors, outline agreements for planned purchases, or RFQs for vendor selection when no source exists",
+explanation: "The system follows a hierarchy of methods to determine the appropriate vendor and purchasing method for each requirement.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the relationship between Account Category Reference, Material Type, and Valuation Class?",
+answer: "Account Category Reference acts as a bridge allowing many-to-many relationships between Material Types and Valuation Classes",
+explanation: "This flexible configuration allows multiple material types to share valuation classes and vice versa.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How do Transaction Keys and Account Modifiers work together in movement type configuration?",
+answer: "Transaction Keys identify the business transaction type, while Account Modifiers provide finer control within each transaction key",
+explanation: "This two-level approach allows precise account determination for complex business scenarios.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What are the different categories of movement types and their number ranges?",
+answer: "1XX-Goods Receipt, 2XX-Goods Issue, 3XX-Transfers, 4XX-Special Stock, 5XX-GR without reference, 6XX-Shipping, 7XX-Inventory Differences",
+explanation: "Movement types are systematically organized by number ranges that indicate their purpose and function.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How does the Automatic Payment Run process work?",
+answer: "It automatically selects open invoices based on criteria, processes payments through various media, and creates accounting documents",
+explanation: "This batch process handles multiple vendor payments efficiently while maintaining proper controls and documentation.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Loading Point in shipping?",
+answer: "A specific physical location within a shipping point where goods are actually loaded, such as specific docks",
+explanation: "Loading points represent the granular physical locations where loading operations occur within a shipping point.",
+category: "MM",
+difficulty: "hard"
+},
+{
+question: "How do Product Hierarchies function in material classification?",
+answer: "They create multi-level classification structures for reporting and analysis, with each level representing a different categorization",
+explanation: "Product hierarchies allow materials to be grouped and analyzed at different levels of granularity for management reporting.",
+category: "MM",
+difficulty: "hard"
+},
+      {
+question: "What is the primary focus of Management Accounting (CO) compared to Financial Accounting (FI)?",
+answer: "CO focuses on the internal view for management decision-making, while FI focuses on the external view for legal reporting.",
+explanation: "Management Accounting provides internal information for decision-making, while Financial Accounting is legally required for external reporting.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "Which organizational unit represents a closed system for cost accounting purposes?",
+answer: "Controlling Area",
+explanation: "A Controlling Area is used to represent a closed system for cost accounting and may include multiple company codes.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What is a Cost Center?",
+answer: "An organizational unit within a controlling area that represents a defined location of cost incurrence.",
+explanation: "Cost Centers track where costs occur within an organization, based on function, allocation, location, or responsibility.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What are Primary Costs?",
+answer: "Costs incurred from external business events like material expenses, salaries, and depreciation.",
+explanation: "Primary costs correspond to expense and revenue accounts in Financial Accounting and come from external transactions.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What are Secondary Costs?",
+answer: "Costs incurred through in-house exchange of services between departments.",
+explanation: "Secondary costs are internal cost flows tracked using secondary cost elements within the Controlling module.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of Activity Types?",
+answer: "To classify activities performed by a cost center for other cost centers and serve as tracing factors for cost allocation.",
+explanation: "Activity Types measure internal activities and are used to allocate costs between cost centers.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What is the main difference between Fixed and Variable costs?",
+answer: "Fixed costs remain constant regardless of activity level, while variable costs change with activity level.",
+explanation: "Fixed costs are period-based and don't fluctuate with production volume, while variable costs are directly tied to activity levels.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What does COGM stand for?",
+answer: "Cost of Goods Manufactured",
+explanation: "COGM includes direct material, direct labor, and manufacturing overhead costs for products produced.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What does COGS stand for?",
+answer: "Cost of Goods Sold",
+explanation: "COGS includes all costs directly attributable to goods sold, including manufacturing costs plus sales and administrative costs.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What is a Bill of Material (BOM)?",
+answer: "A list of components required to produce a material.",
+explanation: "BOMs are used in MRP, production, procurement, and product costing to define product composition.",
+category: "Controlling",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of a Cost Center Hierarchy?",
+answer: "To organize cost centers into a tree structure that aggregates costs and assigns management responsibilities.",
+explanation: "The hierarchy represents all costs for a legal entity and serves as a basis for management reporting.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is an Internal Order?",
+answer: "A flexible CO tool used to track costs and revenues for specific purposes within a controlling area.",
+explanation: "Internal orders monitor costs for projects, investments, accruals, or revenue tracking and can be temporary.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What are Statistical Key Figures (SKF) used for?",
+answer: "As allocation bases for overhead costs where no other standard measurement method is available.",
+explanation: "SKFs provide statistical data for cost allocation but have no financial impact on accounting.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Assessment and Distribution?",
+answer: "Assessment allocates both primary and secondary costs using assessment cost elements, while Distribution allocates only primary costs maintaining original cost elements.",
+explanation: "Assessment groups costs and transfers them using secondary cost elements, while Distribution preserves original cost element information.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is a Cost Element?",
+answer: "Accounts used to monitor internal business operations and classify costs.",
+explanation: "Cost elements track costs in Controlling, with primary elements from FI and secondary elements for internal allocations.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of a Cost Element Category?",
+answer: "To determine which cost objects can be integrated when posting and achieve control objectives.",
+explanation: "Different categories control how costs are allocated, such as category 42 for assessment and 43 for internal activity allocation.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Real and Statistical Postings?",
+answer: "Real postings affect financial accounting, while statistical postings are for reporting and analysis only.",
+explanation: "Statistical postings add dimensions for enhanced analysis but don't duplicate initial financial postings.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is Product Costing?",
+answer: "The process of calculating the cost of goods manufactured and cost of goods sold per product unit.",
+explanation: "Product costing uses bills of materials and routings to determine product costs automatically.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is a Costing Variant?",
+answer: "A key that determines control parameters for how a cost estimate is performed and valuated.",
+explanation: "Costing variants define the rules and methods for calculating product costs based on different BOMs and routings.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of a Routing?",
+answer: "To define the sequence of operations necessary for production and the work centers where they occur.",
+explanation: "Routings contain production steps, their sequence, and work center assignments for manufacturing processes.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Variant BOM and Alternative BOM?",
+answer: "Variant BOM groups similar products with high identical parts, while Alternative BOM provides different ways to make the same material.",
+explanation: "Variant BOM handles product variations, while Alternative BOM offers different production methods for the same product.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What are Cycles and Segments used for in overhead allocation?",
+answer: "Cycles define sender-receiver relationships, while segments contain allocation rules between sending and receiving objects.",
+explanation: "Cycles group related allocation rules, and segments specify how costs are allocated between specific objects.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the Iterative indicator in cycle definition?",
+answer: "To handle cyclical links between cost centers by allowing multiple allocation passes.",
+explanation: "When cost centers mutually provide services to each other, iterative processing ensures proper cost allocation.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is a Cost Object?",
+answer: "Anything that gathers cost, such as cost centers, internal orders, or production orders.",
+explanation: "Cost objects are the recipients of cost allocations and the focus of cost analysis in Controlling.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Fixed and Total categories for Statistical Key Figures?",
+answer: "Fixed values remain constant for the fiscal year, while Total values can change each period.",
+explanation: "Fixed SKFs like employee count don't change often, while Total SKFs like utility usage vary by period.",
+category: "Controlling",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Activity Type Category?",
+answer: "To determine the method of activity quantity planning and activity allocation.",
+explanation: "The category controls how activities are planned and allocated between cost centers.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What are the four main types of Internal Orders?",
+answer: "Overhead orders, Investment orders, Accrual orders, and Orders with revenue.",
+explanation: "Each type serves different purposes: monitoring overhead, tracking investments, handling accruals, or tracking revenues.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the significance of Cost Center Category?",
+answer: "It specifies the type of cost center and helps set default properties and allowed activities.",
+explanation: "Different categories control what activities and postings are allowed for specific types of cost centers.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Costing with Quantity Structure and without Quantity Structure?",
+answer: "With quantity structure uses BOM and routing, while without uses manual cost entry without reference to production data.",
+explanation: "Quantity structure costing automatically uses production data, while manual costing allows flexible cost input.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is a Costing Version?",
+answer: "A number that differentiates between cost estimates for the same material using the same costing variant.",
+explanation: "Costing versions allow multiple cost estimates for analysis, mixed costing, or transfer price calculations.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Task List Group and Group Counter?",
+answer: "To combine similar task lists and identify different versions or lot-size ranges for the same production process.",
+explanation: "The group identifies similar processes, while the counter differentiates specific versions within the group.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Upper Level and Lower Level costs in product costing?",
+answer: "Upper level includes internal activities and overhead costs, while lower level includes materials and raw materials.",
+explanation: "Upper level costs occur at the production level, while lower level costs come from component materials.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What are the two methods of Profitability Analysis?",
+answer: "Account-based and Costing-based profitability analysis.",
+explanation: "Account-based uses GL accounts, while costing-based uses cost components like variable and marginal costs.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of BOM Usage?",
+answer: "To define unique BOMs for the same material for different areas of the company.",
+explanation: "Different BOM usages allow the same material to have different component structures for various business purposes.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is a Production Resource/Tool (PRT)?",
+answer: "Items needed to manufacture a product, such as tools, instructions, or equipment.",
+explanation: "PRTs include non-inventory items required for production but not part of the finished product.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Costing Status?",
+answer: "To track the progress and release status of cost estimates for materials.",
+explanation: "Costing status indicates whether a cost estimate is in development, released, or marked for update.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Material Type and Industry Sector?",
+answer: "Material Type groups materials with similar properties, while Industry Sector controls screen sequences and industry-specific fields.",
+explanation: "Material Type determines available views, while Industry Sector defines industry-specific configuration.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Planner Group in production?",
+answer: "To represent persons or groups responsible for production planning.",
+explanation: "Planner Groups assign responsibility for production planning and control activities.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What are the key requirements for company codes assigned to the same controlling area?",
+answer: "They must use the same operative chart of accounts and fiscal year variant.",
+explanation: "Consistent chart of accounts and fiscal periods ensure proper cost accounting across company codes.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Cost Element Groups?",
+answer: "To collect cost elements with similar characteristics for efficient tracking and control.",
+explanation: "Groups simplify cost analysis and reporting by organizing related cost elements together.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "How does Activity Type allocation differ from Statistical Key Figure allocation?",
+answer: "Activity Types have financial rates and serve as tracing factors, while SKFs are statistical only with no financial impact.",
+explanation: "Activity Types directly allocate costs using activity rates, while SKFs provide allocation bases without financial postings.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Routing Usage and Status?",
+answer: "Usage defines where task lists can be used, while Status indicates development or release status.",
+explanation: "Usage controls application areas, while Status determines whether routing is available for use.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Factory Overhead and Other Overhead?",
+answer: "Factory Overhead relates to production activities, while Other Overhead relates to administrative and support functions.",
+explanation: "Factory overhead includes indirect production costs, while other overhead covers non-production support costs.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What valuation methods are recommended for different material types?",
+answer: "Standard price for semi-finished and finished goods, moving average price for raw materials and trading goods.",
+explanation: "Standard price provides stability for produced items, while moving average reflects current market prices for purchased items.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Costing Lot Size?",
+answer: "To define the production quantity used in product cost estimates.",
+explanation: "Costing lot size determines the basis for calculating fixed and variable costs per unit.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "How are Input Price Variance and Input Quantity Variance calculated?",
+answer: "Price Variance = (Actual Price - Plan Price) × Actual Quantity; Quantity Variance = (Actual Quantity - Target Quantity) × Plan Price",
+explanation: "Price variance measures cost differences due to price changes, while quantity variance measures efficiency differences.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the role of Cost Center Category in controlling postings?",
+answer: "It restricts which cost elements can be posted to specific types of cost centers.",
+explanation: "Cost center categories provide control by limiting allowable postings based on cost center type.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the difference between Primary and Secondary Cost Elements?",
+answer: "Primary elements correspond to FI accounts, while secondary elements are for internal CO allocations only.",
+explanation: "Primary elements track external costs, while secondary elements handle internal cost transfers within Controlling.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the Assessment process?",
+answer: "To allocate both primary and secondary costs from sender to receiver objects using assessment cost elements.",
+explanation: "Assessment simplifies cost allocation by grouping costs and transferring them using secondary cost elements.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "How does Product Costing integrate with Production Planning?",
+answer: "It automatically uses bills of materials and routings from PP to calculate product costs.",
+explanation: "Integration ensures that cost estimates reflect actual production processes and material requirements.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the significance of the Controlling Area in multi-company environments?",
+answer: "It allows cost accounting across multiple company codes while maintaining a closed system for internal allocations.",
+explanation: "Controlling areas enable consolidated cost management across legal entities with different currencies but same chart of accounts.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of Statistical Postings in cost accounting?",
+answer: "To provide additional analytical dimensions without affecting financial accounting records.",
+explanation: "Statistical postings enhance reporting capabilities by tracking costs across multiple dimensions simultaneously.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "How do Activity Types facilitate internal cost allocation?",
+answer: "By measuring internal services provided and applying activity prices to allocate costs between cost centers.",
+explanation: "Activity types quantify internal services and use predetermined rates to transfer costs from providing to receiving centers.",
+category: "Controlling",
+difficulty: "hard"
+},
+{
+question: "What is the role of Cost Element Category in assessment and distribution?",
+answer: "It controls how costs are allocated, with category 42 for assessment and category 43 for internal activity allocation.",
+explanation: "Different cost element categories determine the allocation method and which cost objects can receive postings.",
+category: "Controlling",
+difficulty: "hard"
+},
+    {
+question: "What are the four main types of General Ledger (GL) accounts listed in the document?",
+answer: "Bank Account, Reconciliation Account, Expense Account, Vendor Account",
+explanation: "The completion sheet lists these four specific types of GL accounts.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What is the account name for GL account number 100000 in chart of accounts GL00?",
+answer: "Bank",
+explanation: "The document specifies that account 100000 is the Bank account.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What type of account is Accounts Receivable (account 110000)?",
+answer: "Asset",
+explanation: "Accounts Receivable is an asset account, representing money owed to the company.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "Which GL account represents 'Travel Expense - Airfare'?",
+answer: "741200",
+explanation: "The document lists 741200 as the account for Travel Expense - Airfare.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What does the account type 'D' represent?",
+answer: "Debtor",
+explanation: "The completion sheet specifies that 'D' stands for Debtor accounts.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What does the account type 'K' represent?",
+answer: "Creditor",
+explanation: "The completion sheet specifies that 'K' stands for Creditor accounts.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What is the primary purpose of a reconciliation account?",
+answer: "It consolidates postings from sub-ledgers into the General Ledger.",
+explanation: "Reconciliation accounts summarize transactions from detailed subsidiary ledgers like accounts receivable and payable.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What is the function of a sort key in financial accounting?",
+answer: "It automatically populates a document field during posting.",
+explanation: "Sort keys automate data entry by filling specific fields like assignment numbers in financial documents.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What does a field status group control?",
+answer: "It controls which fields are required, optional, or hidden in transactions.",
+explanation: "Field status groups determine the visibility and mandatory status of fields during financial document entry.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What is a chart of accounts?",
+answer: "A structured list of a company's general ledger accounts.",
+explanation: "The chart of accounts organizes all accounts used in a company's financial reporting system.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What are the typical accounting entries for recording a vendor invoice?",
+answer: "Debit Expense Account, Credit Accounts Payable/Vendor Account",
+explanation: "This records the expense incurred and the liability to pay the vendor.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What are the typical accounting entries for making a payment to a vendor?",
+answer: "Debit Accounts Payable, Credit Bank Account",
+explanation: "This reduces the liability to the vendor and decreases the bank balance.",
+category: "Financial Accounting",
+difficulty: "easy"
+},
+{
+question: "What type of account is 'Accumulated Depreciation' (account 329000)?",
+answer: "Contra-asset account",
+explanation: "Accumulated Depreciation is a contra-asset account that reduces the value of fixed assets on the balance sheet.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What type of account is 'Cost of Goods Sold' (account 800000)?",
+answer: "Expense account",
+explanation: "Cost of Goods Sold is an expense account that represents the direct costs of producing goods sold.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What does the account type 'M' represent in SAP financial accounting?",
+answer: "Material",
+explanation: "The completion sheet specifies that 'M' stands for Material accounts used in inventory management.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What does the account type 'S' represent in SAP financial accounting?",
+answer: "General Ledger",
+explanation: "The completion sheet specifies that 'S' stands for General Ledger accounts.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "Which account would typically be used to record the purchase of equipment?",
+answer: "Equipment account (300000)",
+explanation: "Equipment purchases are capitalized as assets and recorded in the Equipment account.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the 'Interest Calculation Frequency' field in company code data?",
+answer: "It determines how often interest is calculated on the account.",
+explanation: "This field controls the frequency for automatic interest calculation on account balances.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What does the 'Tax Category' field control in company code configuration?",
+answer: "It determines how taxes are handled for the account.",
+explanation: "The tax category specifies the tax treatment for transactions posted to the account.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "Why would a company need to extend accounts to multiple company codes?",
+answer: "To use the same chart of accounts across different legal entities or locations.",
+explanation: "Extending accounts allows consistent financial reporting while maintaining separate company code-specific data.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What is the relationship between a vendor account and a reconciliation account?",
+answer: "Individual vendor accounts are sub-ledgers that post to a vendor reconciliation account in the general ledger.",
+explanation: "Vendor sub-ledgers track individual vendor balances, while the reconciliation account summarizes all vendor activity in the GL.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What is the difference between an expense account and a vendor account?",
+answer: "Expense accounts record costs incurred, while vendor accounts track amounts owed to suppliers.",
+explanation: "Expense accounts affect the income statement, while vendor accounts are liability accounts on the balance sheet.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "How does the field status group 'ZGBS' typically function?",
+answer: "It's a standard field status group that controls field display in balance sheet accounts.",
+explanation: "ZGBS is commonly used for balance sheet accounts to determine which fields are required or optional.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What is the significance of having different currencies for US00 and DE00 company codes?",
+answer: "US00 uses USD for US operations, while DE00 uses EUR for German operations.",
+explanation: "Different currencies allow each company code to record transactions in their local operating currency.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What type of account is 'Inventory' (account 200000) and where does it appear?",
+answer: "Asset account on the balance sheet",
+explanation: "Inventory is a current asset representing goods available for sale or in production.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the 'Account Group' field when creating GL accounts?",
+answer: "It groups accounts with similar characteristics and controls the account number range.",
+explanation: "Account groups determine the number range for accounts and their general characteristics.",
+category: "Financial Accounting",
+difficulty: "medium"
+},
+{
+question: "How are business partner numbers and vendor numbers related in the SAP system?",
+answer: "A business partner can be assigned vendor roles, and the vendor number is a role-specific identifier.",
+explanation: "The business partner is the superordinate record, while vendor numbers are specific to the purchasing function.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the accounting impact when posting a goods receipt for inventory?",
+answer: "Debit Inventory account, Credit GR/IR (Goods Receipt/Invoice Receipt) account",
+explanation: "This records the increase in inventory and the temporary liability until the vendor invoice is received.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of a cost element in financial accounting?",
+answer: "It links financial accounting (FI) with controlling (CO) by identifying the nature of costs.",
+explanation: "Cost elements ensure that expenses posted in FI are properly tracked and analyzed in the CO module.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the system handle intercompany transactions between US00 and DE00?",
+answer: "Through intercompany accounts that reconcile balances between company codes.",
+explanation: "Intercompany accounts ensure that transactions between related legal entities are properly eliminated in consolidation.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the difference between a primary cost element and a secondary cost element?",
+answer: "Primary cost elements originate from FI postings, while secondary cost elements represent internal cost allocations.",
+explanation: "Primary costs come from external transactions, while secondary costs are for internal cost distribution.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Sort Key' 001 mentioned in the company code data?",
+answer: "It likely automatically populates the assignment field with the document date or other specified criteria.",
+explanation: "Sort keys automate field population to ensure consistent data entry and reporting.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are document numbers assigned in SAP financial accounting?",
+answer: "Through number ranges that can be internal (system-assigned) or external (user-entered).",
+explanation: "Document number ranges control the numbering sequence for financial documents and ensure uniqueness.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the relationship between a business partner and multiple company codes?",
+answer: "A business partner can be used across multiple company codes with company code-specific data.",
+explanation: "The business partner master data is client-level, while vendor/customer data is company code-specific.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What accounting principle ensures that the chart of accounts structure remains consistent across company codes?",
+answer: "The operating chart of accounts concept",
+explanation: "An operating chart of accounts allows multiple company codes to use the same account structure while maintaining local requirements.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the system handle exchange rate differences in multi-currency accounting?",
+answer: "Through exchange rate difference accounts that record gains or losses from currency fluctuations.",
+explanation: "Exchange rate differences occur when transactions are settled in a different currency or at different rates.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Tax Category' asterisk (*) in company code configuration?",
+answer: "It typically means no tax relevance or that tax is determined by transaction type.",
+explanation: "The asterisk may indicate that tax processing is not applicable or is determined dynamically.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are open item management and clearing different in vendor vs. customer accounts?",
+answer: "Both use open item management, but vendor accounts represent payables while customer accounts represent receivables.",
+explanation: "Open item management ensures all invoices and payments are properly matched and cleared in both sub-ledgers.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the significance of having both a business partner number and a vendor number for the same entity?",
+answer: "The business partner is the central master record, while the vendor number is specific to the purchasing function.",
+explanation: "This allows a single entity to have multiple roles (customer, vendor) while maintaining one master record.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the account assignment group function in revenue account determination?",
+answer: "It groups accounts with similar accounting requirements for automatic account determination.",
+explanation: "Account assignment groups help the system determine the correct G/L accounts during posting based on transaction characteristics.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of maintaining both short text and long text for GL accounts?",
+answer: "Short text for displays and reports, long text for detailed description and documentation.",
+explanation: "Short texts are used in selection screens and reports, while long texts provide comprehensive account descriptions.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the system ensure consistency between sub-ledgers and general ledger accounts?",
+answer: "Through reconciliation accounts that automatically receive postings from sub-ledgers.",
+explanation: "Every posting in a sub-ledger account automatically creates a corresponding entry in the reconciliation account.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the difference between document type and posting key in financial accounting?",
+answer: "Document type controls the document class and number range, while posting key determines account type and debit/credit.",
+explanation: "Document types categorize documents (e.g., invoice, payment), while posting keys control account selection and debit/credit posting.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are fiscal year variants used in multi-company code environments?",
+answer: "They define the posting periods and can be shared across company codes with similar reporting requirements.",
+explanation: "Fiscal year variants control the opening and closing of posting periods for financial reporting.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Interest Calculation' field being set to 0?",
+answer: "It likely disables automatic interest calculation for the account.",
+explanation: "A value of 0 typically means no automatic interest calculation is performed on account balances.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the system handle partial payments against vendor invoices?",
+answer: "Through open item management where partial payments reduce but don't clear the invoice until fully paid.",
+explanation: "Partial payments update the open item without clearing it, maintaining the audit trail until final settlement.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the significance of document numbers like 1900000017 and 1500000018?",
+answer: "They represent specific transaction documents within defined number ranges (19xxxx for invoices, 15xxxx for payments).",
+explanation: "The prefix indicates the document type or number range, helping identify the nature of the transaction.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are foreign currency transactions recorded in local company code currency?",
+answer: "Using exchange rates to convert foreign currency amounts to local currency at the time of posting.",
+explanation: "The system records both the foreign currency amount and the local currency equivalent using prevailing exchange rates.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What controls the automatic account determination for expense postings?",
+answer: "Account determination keys and account modification rules based on transaction type and material group.",
+explanation: "Automatic account assignment uses predefined rules to determine the correct G/L accounts for different business transactions.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are vendor down payments accounted for differently from regular invoice payments?",
+answer: "Down payments are recorded as advances (assets) until the invoice is received, then applied against the liability.",
+explanation: "Down payments create special G/L account postings that are cleared when the final invoice is processed.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of maintaining parallel currencies in company code configuration?",
+answer: "To support reporting in multiple currencies, such as group currency and hard currency, alongside local currency.",
+explanation: "Parallel currencies allow financial reporting in additional currencies for consolidation or international reporting requirements.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How does the system handle year-end closing procedures for asset accounts?",
+answer: "Through depreciation run, asset balance carryforward, and reconciliation with general ledger.",
+explanation: "Year-end procedures ensure asset values, accumulated depreciation, and related expenses are properly stated for financial reporting.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the difference between a one-time vendor and a regular vendor master record?",
+answer: "One-time vendors are for infrequent suppliers without full master data, while regular vendors have complete master records.",
+explanation: "One-time vendors simplify processing for occasional suppliers by reducing master data maintenance requirements.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "How are payment terms configured to support cash discount calculations?",
+answer: "Through payment term keys that define due dates and discount percentages for early payment.",
+explanation: "Payment terms automatically calculate due dates and available discounts based on the baseline date.",
+category: "Financial Accounting",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Reconciliation Account' concept in sub-ledger accounting?",
+answer: "To ensure sub-ledger transactions are automatically summarized in the general ledger for reporting.",
+explanation: "Reconciliation accounts maintain the link between detailed sub-ledger records and summary GL balances.",
+category: "Financial Accounting",
+difficulty: "hard"
+},                        
+      {
+question: "What is the highest organizational level in the SAP system?",
+answer: "Client",
+explanation: "The Client is the highest level in the SAP system, representing a group of companies or a corporate group.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "Which Business Partner category represents an individual?",
+answer: "Person",
+explanation: "A 'Person' is a Business Partner category representing an individual.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What partner function determines credit limits and terms of payment?",
+answer: "Payor (Payer)",
+explanation: "The Payor partner function is responsible for determining credit limits and payment terms.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What partner function determines taxes and the delivery plant?",
+answer: "Ship to party",
+explanation: "The Ship to party partner function determines taxes, the ship-to address, and the delivery plant.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "A Sales Area is a combination of which three organizational elements?",
+answer: "Sales Organization, Distribution Channel, Division",
+explanation: "A Sales Area is uniquely defined by the combination of Sales Organization, Distribution Channel, and Division.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of a Distribution Channel?",
+answer: "To differentiate sales strategies like wholesale, retail, or internet sales.",
+explanation: "Distribution Channels allow a company to segment its market and apply different strategies, pricing, and logistics for different sales methods.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What does the Division represent in the SAP SD organizational structure?",
+answer: "Product line or brand",
+explanation: "A Division typically represents a major product line or brand within a company's portfolio.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What is stored in a Customer Material Info Record?",
+answer: "Customer-specific information about a material, such as an alternative product name or special price.",
+explanation: "This record holds information relevant to a specific customer and a specific material, like a customer-specific material description or pricing.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What are Incoterms?",
+answer: "Internationally accepted rules for world trade that define delivery conditions and obligations of buyers and sellers.",
+explanation: "Incoterms (like FOB, DES) clarify responsibilities for costs and risks during the international transport of goods.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What do Payment Terms specify?",
+answer: "The time period for payment and any available discounts for early payment.",
+explanation: "Payment Terms define when an invoice is due and if a discount is offered for payment before the due date (e.g., PT30 with a 3% discount in 15 days).",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "Which sales document type is used for a standard sales order?",
+answer: "OR",
+explanation: "OR is the abbreviation for the standard sales order document type.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "At which level in a sales order are fields like Material Number and Order Quantity found?",
+answer: "Item Level",
+explanation: "Item-specific data, such as the material number and order quantity, are maintained at the item level of a sales order.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "At which level in a sales order are fields like Sold-to Party and Payment Terms found?",
+answer: "Header Level",
+explanation: "Data that applies to the entire sales order, such as the Sold-to Party and Payment Terms, is stored at the header level.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What is the purpose of a Shipping Point?",
+answer: "It is an organizational unit responsible for processing outbound deliveries.",
+explanation: "A Shipping Point is where shipping activities are coordinated and executed for a plant.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What is the financial accounting impact when a Billing document is created?",
+answer: "Customer/Accounts Receivable is debited and Sales Revenue is credited.",
+explanation: "Creating a billing document recognizes revenue by crediting the sales account and debiting the customer's account receivable.",
+category: "SD",
+difficulty: "easy"
+},
+{
+question: "What is the financial accounting impact when a Goods Issue is posted?",
+answer: "Cost of Goods Sold (COGS) is debited and Finished Goods Inventory is credited.",
+explanation: "Posting a goods issue reduces inventory (credit) and recognizes the cost of the sale (debit to COGS).",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the key identifying factor for a Business Partner?",
+answer: "It is unique within a client.",
+explanation: "The Business Partner number is a unique identifier across all roles and categories within a single SAP client.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "How can the same entity be both a customer and a supplier in SAP?",
+answer: "By creating a superordinate Business Partner and assigning it both customer and vendor roles.",
+explanation: "The Business Partner concept allows a single entity to have multiple roles, preventing data redundancy.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "If a company has 4 Sales Organizations, 3 Distribution Channels, and 2 Divisions, what is the maximum number of possible Sales Areas?",
+answer: "24",
+explanation: "The maximum number is calculated by multiplying the number of each element: 4 * 3 * 2 = 24. The actual number might be lower if not all combinations are used.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of a Sales Document Type?",
+answer: "It classifies sales documents and controls the sequence of screens, fields, and business processes.",
+explanation: "The Sales Document Type (e.g., IN, QT, OR) determines the behavior and data requirements for different kinds of sales transactions.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the difference between a Delivery Block and a Billing Block?",
+answer: "A Delivery Block prevents the creation of a delivery, while a Billing Block prevents the creation of an invoice.",
+explanation: "Blocks are used to temporarily halt specific process steps for control purposes.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What controls whether a schedule line in a sales order is relevant for delivery?",
+answer: "Schedule Line Category",
+explanation: "The Schedule Line Category determines if a schedule line is used for delivery scheduling and planning.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What three factors are used to determine the Shipping Point for a sales order item?",
+answer: "Shipping condition (from customer master), Loading group (from material master), Delivering plant.",
+explanation: "The system proposes a Shipping Point based on the combination of these three elements.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the Condition Technique for Pricing?",
+answer: "The method by which the system determines prices from information stored in condition records.",
+explanation: "It's a flexible mechanism that uses condition types, access sequences, and pricing procedures to calculate prices, discounts, and taxes.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is a Pricing Procedure?",
+answer: "A list of condition types and subtotals in a specific sequence used to calculate the final price in a business context.",
+explanation: "The pricing procedure defines the structure and logic for how all pricing elements are calculated and totaled.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is an Access Sequence?",
+answer: "A search strategy that defines the order in which the system searches for condition records.",
+explanation: "An access sequence is assigned to a condition type and specifies the hierarchy of criteria (e.g., customer-specific, material-specific, general) used to find a valid price or discount.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "How is the Pricing Procedure determined for a sales document?",
+answer: "By the combination of Sales Area, Sales Document Type, and Customer Pricing Procedure.",
+explanation: "These three elements are used together in a schema determination to select the appropriate pricing procedure.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of the 'Account Key' in a Pricing Procedure?",
+answer: "To determine which General Ledger account will be posted to for revenue or expense items, integrating SD with FI.",
+explanation: "The account key (e.g., ERL for Revenue, ERF for Freight Revenue) links the SD condition type to a specific G/L account for automatic account assignment during billing.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is Automatic Revenue Account Determination?",
+answer: "The process that automatically assigns the correct G/L revenue account during billing document creation.",
+explanation: "This process uses keys like the Account Assignment Group for Customer and Material to find the correct revenue account in the chart of accounts.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of Partner Determination?",
+answer: "To define the allowable partner functions, their mandatory status, and whether they can be changed for a business transaction.",
+explanation: "Partner Determination procedures ensure that the correct business partners (e.g., Sold-to, Ship-to, Payer) are proposed and maintained in sales documents.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What does Text Determination facilitate in the SD process?",
+answer: "The exchange of information between the company and customer via texts like sales notes, packing instructions, or billing instructions.",
+explanation: "Texts can be automatically copied from master data to documents to provide specific instructions or information.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What three aspects are controlled by Output Determination?",
+answer: "To whom the message is sent, when it is sent, and how it is sent (transmission medium).",
+explanation: "Output determination controls business communications, specifying the partner, timing, and medium (e.g., email, print, XML) for outputs like order confirmations.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the difference between Order-Related Billing and Delivery-Related Billing?",
+answer: "Order-Related Billing is for services without tangible goods (invoice references the order), while Delivery-Related Billing is for goods (invoice references the delivery).",
+explanation: "This distinction allows the system to handle billing for different types of sales processes.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is Backorder Processing?",
+answer: "The distribution of goods that are in short supply by prioritizing customer orders based on business strategy.",
+explanation: "It involves reallocating available stock among current and new orders according to customer segments (e.g., Win, Gain, Lose).",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "How is Order Probability calculated for a sales document item?",
+answer: "The system multiplies the probability from the sales document type by the probability from the sold-to party's customer master record.",
+explanation: "For example, a 50% probability in the customer master and an 80% probability for the quotation document type results in a proposed 40% order probability.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is the purpose of an Availability Check?",
+answer: "To determine if a requested product can be delivered by the customer's requested date.",
+explanation: "The check considers current stock, planned receipts, and existing commitments to confirm delivery dates.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "Which condition type typically represents the gross price of a material?",
+answer: "PR00",
+explanation: "PR00 is a standard condition type used for the base price of a material.",
+category: "SD",
+difficulty: "medium"
+},
+{
+question: "What is a 'Group Condition' in the context of pricing?",
+answer: "A condition that calculates its value by aggregating data from more than one item in the document.",
+explanation: "Group conditions are used for discounts or surcharges that are applied based on the total value or quantity of multiple items, rather than a single item.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In the context of pricing procedure configuration, what does the 'Requirement' field define?",
+answer: "An ABAP routine that can be used to dynamically control when a condition type is applied or suppressed.",
+explanation: "Requirements allow for complex logic, such as applying a rebate only if a delivery exists, not just a sales order.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the function of the 'Subtotal' field in a pricing procedure?",
+answer: "It designates a step where the system stores a temporary total, which can be used in subsequent calculations.",
+explanation: "Subtotals are used to capture intermediate values (e.g., net value before tax) for display or for use in calculating other condition types.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the significance of the 'Statistical' flag in a pricing procedure condition?",
+answer: "It marks a condition for informational purposes only, meaning its value is not included in the final price calculation.",
+explanation: "Statistical conditions are used to display costs or values (like internal cost VPRS) on the document without affecting the net price.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "How does the system determine the Delivering Plant for a sales order item?",
+answer: "It checks three levels in sequence: 1. Customer-Material Info Record (CMIR), 2. Customer Master (Ship-to Party), 3. Material Master (Sales Org view).",
+explanation: "The system uses this hierarchical determination to find the most specific source for the delivering plant.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the relationship between a Shipping Point and a Loading Point?",
+answer: "A Shipping Point can contain multiple Loading Points. A Loading Point is a further subdivision (e.g., a specific dock) where goods are physically loaded.",
+explanation: "Loading Points represent the physical locations within a Shipping Point where loading operations occur.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In Route Determination, what factors are used to determine the route?",
+answer: "Transportation zone of the shipping point and customer, shipping condition, and material transportation group.",
+explanation: "The system uses these factors to automatically propose the optimal route for delivery.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Account Assignment Group for Customer' (AAGC)?",
+answer: "To group customers with similar accounting requirements, which is a key criterion in automatically determining the correct revenue G/L account during billing.",
+explanation: "This grouping allows for different revenue accounts to be used for different types of customers (e.g., domestic vs. export).",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of the 'Account Assignment Group for Material'?",
+answer: "To group materials with the same accounting requirements, which is a key criterion in automatically determining the correct revenue G/L account during billing.",
+explanation: "This grouping allows for different revenue accounts to be used for different types of products or product lines.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the difference between condition types KOFI and KOFK?",
+answer: "KOFI is for account determination without a controlling object, while KOFK is for account determination with a controlling object.",
+explanation: "These condition types are part of revenue account determination and handle integration with the Controlling (CO) module.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In the context of Availability Check, what is the 'Demand Time Fence'?",
+answer: "The point in time inside of which the forecast is no longer included in the total demand and available inventory calculations.",
+explanation: "Inside the demand time fence, planning relies solely on actual customer orders, providing a more reliable view of short-term availability.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In the context of Availability Check, what is the 'Planning Time Fence'?",
+answer: "A period within which no automatic changes are made to the master plan by MRP; planned orders are often firmed.",
+explanation: "This fence protects the short-term production and procurement schedule from system-driven changes, ensuring stability.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of a 'Material Listing'?",
+answer: "To define a list of materials that a specific customer is allowed to order.",
+explanation: "Material listings restrict the products a customer can purchase, often used for contract or assortment management.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the purpose of a 'Material Exclusion'?",
+answer: "To define a list of materials that a specific customer is not allowed to order.",
+explanation: "Material exclusions prevent the sale of certain products to specific customers, often for regulatory or contractual reasons.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is a 'Condition Record'?",
+answer: "A concrete instance of a Condition Type containing specific pricing, discount, or tax data for a defined set of keys (e.g., sold-to, material).",
+explanation: "Condition records are the master data that store the actual values used by the condition technique, such as a price of $100 for material M-1 sold to customer C-1.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In the pricing procedure, what is the function of the 'From' and 'To' steps?",
+answer: "They define a range of steps to be used as a base for percentage-based calculations or for summing up values for subtotals.",
+explanation: "'From' and 'To' allow conditions to reference other steps, enabling calculations like a discount on the sum of all material costs.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What does the 'Mandatory' flag in a pricing procedure condition enforce?",
+answer: "That a value must be determined for this condition type for the document to be considered complete.",
+explanation: "If a condition type is mandatory and the system cannot find a condition record or manual entry, it will trigger an incompletion error.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the primary goal of defining a Sales Document Type as 'Only with reference'?",
+answer: "To enforce that documents of this type can only be created by copying data from a preceding document (e.g., creating a Delivery from a Sales Order).",
+explanation: "This control ensures process integrity and data consistency by linking related documents.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "How does the system handle a deviation between the division in the sales order header and the division in an item?",
+answer: "The behavior is controlled by the configuration of the Sales Document Type, which can specify whether the header division overrides the item division or vice versa.",
+explanation: "This is a key control element in the Sales Document Type configuration that manages data consistency across header and items.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "In the context of business configuration, what is the purpose of defining 'Incompletion Procedures' for a sales document type?",
+answer: "To define which fields are mandatory and must be filled before a document can be saved or considered complete.",
+explanation: "Incompletion procedures ensure that all critical data required for further processing is captured in the document.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the role of the 'Shipping Condition' in the determination of the Shipping Point?",
+answer: "It is a key from the customer master or sales document type that, combined with the Loading Group and Delivering Plant, determines the proposed Shipping Point.",
+explanation: "The Shipping Condition (e.g., 'ASAP' for urgent, 'REG' for regular) influences which Shipping Point is selected to handle the delivery.",
+category: "SD",
+difficulty: "hard"
+},
+{
+question: "What is the function of the 'Loading Group' in the determination of the Shipping Point?",
+answer: "It is a key from the material master that groups materials with similar loading requirements, and is a key factor in Shipping Point determination.",
+explanation: "Materials requiring special handling (e.g., cranes for heavy items) are assigned a specific loading group, which points to a Shipping Point equipped for that task.",
+category: "SD",
+difficulty: "hard"
+}
+    ];
+
+    // App state
+    const state = {
+      currentCategory: '',
+      currentIndex: 0,
+      filteredCards: [],
+      isAnswerRevealed: false
+    };
+
+    // DOM Elements
+    const elements = {
+      categoryContainer: document.getElementById('category-container'),
+      flashcardView: document.getElementById('flashcard-view'),
+      flashcardContainer: document.getElementById('flashcard-container'),
+      navButtons: document.getElementById('nav-buttons'),
+      progressContainer: document.getElementById('progress-container'),
+      progressBar: document.getElementById('progress-bar'),
+      cardCounter: document.getElementById('card-counter'),
+      prevBtn: document.getElementById('prev-btn'),
+      nextBtn: document.getElementById('next-btn'),
+      backBtn: document.getElementById('back-btn'),
+      shuffleBtn: document.getElementById('shuffle-btn'),
+      searchContainer: document.getElementById('search-container'),
+      searchInput: document.getElementById('search-input'),
+      searchButton: document.getElementById('search-button')
+    };
+
+    // Initialize the app
+    function init() {
+      showCategories();
+      setupEventListeners();
+    }
+
+    // Group categories by their root name (e.g., "AWS IAM", "AWS S3" → "AWS")
+    function getGroupedCategories() {
+      const categoryMap = {};
+      
+      flashcards.forEach(card => {
+        // Split category by space and take the first word as group
+        const group = card.category.split(' ')[0];
+        if (!categoryMap[group]) {
+          categoryMap[group] = new Set();
+        }
+        categoryMap[group].add(card.category);
+      });
+      
+      return categoryMap;
+    }
+
+    // Show all categories grouped by their root name
+    function showCategories() {
+      state.currentCategory = '';
+      state.isAnswerRevealed = false;
+      elements.categoryContainer.style.display = 'grid';
+      elements.flashcardView.style.display = 'none';
+      elements.searchContainer.style.display = 'none';
+      elements.categoryContainer.innerHTML = '';
+
+      const categoryGroups = getGroupedCategories();
+      
+      if (Object.keys(categoryGroups).length === 0) {
+        showEmptyState('No categories available', 'Add some flashcards to get started');
+        return;
+      }
+
+      for (const [group, subCategories] of Object.entries(categoryGroups)) {
+        const cardCount = flashcards.filter(c => c.category.startsWith(group)).length;
+        
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        card.innerHTML = `
+          <h3 style="margin-top: 10px;">${group}</h3>
+          <div style="margin-top: 15px; color: var(--gray); font-size: 0.9rem;">
+            ${Array.from(subCategories).join(', ')}
+          </div>
+          <div style="margin-top: 15px; color: var(--gray);">
+            ${cardCount} ${cardCount === 1 ? 'card' : 'cards'}
+          </div>
+          <div style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">
+            Click to view flashcards
+          </div>
+        `;
+        
+        card.addEventListener('click', () => {
+          // Show all cards that start with this group name
+          state.filteredCards = flashcards.filter(c => c.category.startsWith(group));
+          showCardSlider(group);
+        });
+        
+        elements.categoryContainer.appendChild(card);
+      }
+    }
+
+    // Show cards for a specific category
+    function showCardSlider(category) {
+      state.currentCategory = category;
+      state.currentIndex = 0;
+      state.isAnswerRevealed = false;
+      
+      elements.categoryContainer.style.display = 'none';
+      elements.flashcardView.style.display = 'block';
+      elements.searchContainer.style.display = 'flex';
+      
+      updateProgressBar();
+      displayCurrentCard();
+    }
+
+    // Display the current card
+    function displayCurrentCard() {
+      elements.flashcardContainer.innerHTML = '';
+      
+      if (state.filteredCards.length === 0) {
+        showEmptyState('No flashcards available', 'Add some flashcards to this category');
+        return;
+      }
+
+      const card = state.filteredCards[state.currentIndex];
+      const progress = ((state.currentIndex + 1) / state.filteredCards.length) * 100;
+
+      elements.progressBar.style.width = `${progress}%`;
+      elements.cardCounter.textContent = `Card ${state.currentIndex + 1} of ${state.filteredCards.length}`;
+
+      const flashcard = document.createElement('div');
+      flashcard.className = 'flashcard';
+      flashcard.innerHTML = `
+        <span class="category">${card.category.toUpperCase()}</span>
+        <span class="difficulty ${card.difficulty}">${card.difficulty.toUpperCase()}</span>
+        
+        <div class="content-wrapper"> <!-- Added wrapper div -->
+          <div class="question">
+            <i class="fas fa-question-circle"></i> ${card.question}
+          </div>
+          
+          <div class="tap-to-reveal">
+            <i class="fas fa-hand-pointer"></i> Click to reveal answer
+          </div>
+          
+          <div class="answer-content">
+            <div class="answer">
+              <i class="fas fa-lightbulb"></i> ${card.answer}
+            </div>
+            <div class="explanation">
+              <i class="fas fa-info-circle"></i> ${card.explanation}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Add the flashcard to the DOM first
+      elements.flashcardContainer.appendChild(flashcard);
+
+      // Now add the click event listener
+      flashcard.addEventListener('click', function() {
+        const answerContent = this.querySelector('.answer-content');
+        const tapToReveal = this.querySelector('.tap-to-reveal');
+        
+        if (answerContent.style.display === 'block') {
+          answerContent.style.display = 'none';
+          tapToReveal.style.display = 'block';
+        } else {
+          answerContent.style.display = 'block';
+          tapToReveal.style.display = 'none';
+        }
+      });
+    }
+
+    // Update progress bar
+    function updateProgressBar() {
+      const progress = ((state.currentIndex + 1) / state.filteredCards.length) * 100;
+      elements.progressBar.style.width = `${progress}%`;
+    }
+
+    // Show empty state message
+    function showEmptyState(title, message) {
+      elements.flashcardContainer.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-inbox"></i>
+          <h3>${title}</h3>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+
+    // Navigation functions
+    function goToPrevCard() {
+      state.currentIndex = (state.currentIndex - 1 + state.filteredCards.length) % state.filteredCards.length;
+      state.isAnswerRevealed = false;
+      displayCurrentCard();
+    }
+
+    function goToNextCard() {
+      state.currentIndex = (state.currentIndex + 1) % state.filteredCards.length;
+      state.isAnswerRevealed = false;
+      displayCurrentCard();
+    }
+
+    function shuffleCards() {
+      state.filteredCards = shuffleArray(state.filteredCards);
+      state.currentIndex = 0;
+      state.isAnswerRevealed = false;
+      displayCurrentCard();
+    }
+
+    function searchFlashcards() {
+      const searchTerm = elements.searchInput.value.toLowerCase();
+      if (!searchTerm) return;
+      
+      state.filteredCards = flashcards.filter(card => 
+        card.question.toLowerCase().includes(searchTerm) || 
+        card.answer.toLowerCase().includes(searchTerm) ||
+        card.category.toLowerCase().includes(searchTerm)
+      );
+      
+      if (state.filteredCards.length > 0) {
+        state.currentCategory = 'Search Results';
+        state.currentIndex = 0;
+        state.isAnswerRevealed = false;
+        elements.categoryContainer.style.display = 'none';
+        elements.flashcardView.style.display = 'block';
+        elements.searchContainer.style.display = 'flex';
+        updateProgressBar();
+        displayCurrentCard();
+      } else {
+        showEmptyState('No results found', 'Try a different search term');
+      }
+    }
+
+    // Utility functions
+    function shuffleArray(array) {
+      const newArray = [...array];
+      for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+      }
+      return newArray;
+    }
+
+    // Event listeners setup
+    function setupEventListeners() {
+      elements.prevBtn.addEventListener('click', goToPrevCard);
+      elements.nextBtn.addEventListener('click', goToNextCard);
+      elements.backBtn.addEventListener('click', showCategories);
+      elements.shuffleBtn.addEventListener('click', shuffleCards);
+      elements.searchButton.addEventListener('click', searchFlashcards);
+      
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (elements.flashcardView.style.display === 'block') {
+          if (e.key === 'ArrowLeft') goToPrevCard();
+          if (e.key === 'ArrowRight') goToNextCard();
+          if (e.key === ' ') {
+            e.preventDefault();
+            const flashcard = document.querySelector('.flashcard');
+            if (flashcard) {
+              const answerContent = flashcard.querySelector('.answer-content');
+              const tapToReveal = flashcard.querySelector('.tap-to-reveal');
+              
+              if (answerContent.style.display === 'block') {
+                answerContent.style.display = 'none';
+                tapToReveal.style.display = 'block';
+              } else {
+                answerContent.style.display = 'block';
+                tapToReveal.style.display = 'none';
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Initialize the app
+    init();
+  </script>
+</body>
+</html>
